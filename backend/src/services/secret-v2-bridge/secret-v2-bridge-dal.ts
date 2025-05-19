@@ -95,7 +95,9 @@ export const secretV2BridgeDALFactory = ({ db, keyStore }: TSecretV2DalArg) => {
         .select(db.ref("id").withSchema(TableName.SecretTag).as("tagId"))
         .select(db.ref("color").withSchema(TableName.SecretTag).as("tagColor"))
         .select(db.ref("slug").withSchema(TableName.SecretTag).as("tagSlug"))
-        .select(db.ref("rotationId").withSchema(TableName.SecretRotationV2SecretMapping));
+        .select(db.ref("rotationId").withSchema(TableName.SecretRotationV2SecretMapping))
+        .select(db.ref("id").withSchema(TableName.SecretV2JnTag).as("junctionId"));
+
       const data = sqlNestRelationships({
         data: docs,
         key: "id",
@@ -107,7 +109,7 @@ export const secretV2BridgeDALFactory = ({ db, keyStore }: TSecretV2DalArg) => {
         }),
         childrenMapper: [
           {
-            key: "tagId",
+            key: "junctionId",
             label: "tags" as const,
             mapper: ({ tagId: id, tagColor: color, tagSlug: slug }) => ({
               id,

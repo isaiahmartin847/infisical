@@ -2264,6 +2264,7 @@ export const secretV2BridgeServiceFactory = ({
       actionProjectType: ActionProjectType.SecretManager
     });
 
+    console.log("[Secret Mover] finding the source folder");
     const sourceFolder = await folderDAL.findBySecretPath(projectId, sourceEnvironment, sourceSecretPath);
     if (!sourceFolder) {
       throw new NotFoundError({
@@ -2271,6 +2272,7 @@ export const secretV2BridgeServiceFactory = ({
       });
     }
 
+    console.log("[Secret Mover] getting the destination folder");
     const destinationFolder = await folderDAL.findBySecretPath(
       projectId,
       destinationEnvironment,
@@ -2282,6 +2284,8 @@ export const secretV2BridgeServiceFactory = ({
         message: `Destination folder with path '${destinationSecretPath}' in environment with slug '${destinationEnvironment}' not found`
       });
     }
+
+    console.log("[Secret Mover] getting the encrypted secrets");
 
     const sourceSecrets = await secretDAL.find({
       type: SecretType.Shared,
@@ -2333,6 +2337,9 @@ export const secretV2BridgeServiceFactory = ({
       });
     }
 
+    // logger remove this
+    console.log("[Secret Mover] decrypting the secrets");
+
     const { decryptor: secretManagerDecryptor } = await kmsService.createCipherPairWithDataKey({
       type: KmsDataKey.SecretManager,
       projectId
@@ -2344,8 +2351,15 @@ export const secretV2BridgeServiceFactory = ({
         : undefined
     }));
 
+    decryptedSourceSecrets.forEach((element) => {
+      console.log(`Secret details: ${JSON.stringify(element, null, 2)}`);
+    });
+
     let isSourceUpdated = false;
     let isDestinationUpdated = false;
+
+    // logger remove this
+    console.log("[Secret Mover] starting to move all the secrets");
 
     // Moving secrets is a two-step process.
     await secretDAL.transaction(async (tx) => {
